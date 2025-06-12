@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DCT Image Compression</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .file-input-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .image-container:hover {
+      transform: scale(1.02);
+    }
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #4f46e5;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .range-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #4f46e5;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-indigo-700 mb-2">PROGETTO METODO DEL CALCOLO SCIENTIFICO</h1>
+      <p class="text-gray-600 max-w-2xl mx-auto">Carica un'immagine .bmp e scegli i parametri</p>
+    </header>
+
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden max-w-4xl mx-auto">
+      <div class="p-6 md:p-8">
+        <form id="imageForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+          <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-800">1. Scegli l'immagine</h2>
+            <div class="flex flex-col items-center justify-center">
+              <label for="imageFile" class="file-input-label cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium py-4 px-6 rounded-lg border-2 border-dashed border-indigo-300 w-full text-center">
+                <div class="flex flex-col items-center">
+                  <i class="fas fa-cloud-upload-alt text-4xl mb-3"></i>
+                  <p class="mb-1">Click per caricare</p>
+                  <p class="text-sm text-gray-500">.BMP</p>
+                </div>
+                <input type="file" id="imageFile" name="image_file" accept=".bmp,image/bmp" class="hidden" required>
+              </label>
+              <div id="fileName" class="mt-2 text-sm text-gray-500 hidden"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Block Size -->
+            <div class="space-y-4">
+              <h2 class="text-xl font-semibold text-gray-800">2. Ampiezza delle finestrelle</h2>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between mb-2">
+                  <label for="blockSize" class="text-gray-700">Block Dimension:</label>
+                  <span id="blockSizeValue" class="font-medium text-indigo-600">8</span>
+                </div>
+                <input type="range" id="blockSize" name="block_size" min="4" max="32" step="4" value="8" class="w-full range-slider">
+              </div>
+            </div>
+
+            <!-- Threshold -->
+            <div class="space-y-4">
+              <h2 class="text-xl font-semibold text-gray-800">3. Soglia di taglio delle frequenze</h2>
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between mb-2">
+                  <label for="threshold" class="text-gray-700">Threshold:</label>
+                  <span id="thresholdValue" class="font-medium text-indigo-600">8</span>
+                </div>
+                <input type="range" id="threshold" name="threshold" min="0" max="14" value="8" class="w-full range-slider">
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4">
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center">
+              <i class="fas fa-magic mr-2"></i> Processa Immagine
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if original_image and processed_image %}
+    <div id="results" class="mt-12">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Risultati</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="image-container bg-white p-4 rounded-xl shadow-md">
+          <h3 class="text-lg font-semibold text-gray-700 mb-3 text-center">Immagine Originale</h3>
+          <div class="flex justify-center">
+            <img src="data:image/png;base64,{{ original_image }}" alt="Original Image" class="max-w-full rounded-lg border">
+          </div>
+        </div>
+        <div class="image-container bg-white p-4 rounded-xl shadow-md">
+          <h3 class="text-lg font-semibold text-gray-700 mb-3 text-center">Immagine Compressa</h3>
+          <div class="flex justify-center">
+            <img src="data:image/png;base64,{{ processed_image }}" alt="Processed Image" class="max-w-full rounded-lg border">
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    const blockSlider = document.getElementById("blockSize");
+    const thresholdSlider = document.getElementById("threshold");
+    const blockValue = document.getElementById("blockSizeValue");
+    const thresholdValue = document.getElementById("thresholdValue");
+
+    blockSlider.addEventListener("input", function () {
+      blockValue.textContent = this.value;
+      const newMax = (2 * parseInt(this.value)) - 2;
+      thresholdSlider.max = newMax;
+      if (parseInt(thresholdSlider.value) > newMax) {
+        thresholdSlider.value = newMax;
+        thresholdValue.textContent = newMax;
+      }
+    });
+
+    thresholdSlider.addEventListener("input", function () {
+      thresholdValue.textContent = this.value;
+    });
+
+    document.getElementById('imageFile').addEventListener('change', function() {
+      const fileNameDisplay = document.getElementById('fileName');
+      if (this.files.length > 0) {
+        fileNameDisplay.textContent = 'Selected: ' + this.files[0].name;
+        fileNameDisplay.classList.remove('hidden');
+      } else {
+        fileNameDisplay.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
