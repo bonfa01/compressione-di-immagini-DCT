@@ -1,27 +1,15 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from flask import Flask, request, render_template
 import numpy as np
 from PIL import Image
 from io import BytesIO
 from base64 import b64encode
+from codice.dct_utils import dct_base, dct2, idct2 
 
 app = Flask(__name__)
-
-def dct_base(f):
-    D = np.zeros((f, f))
-    for i in range(f):
-        for j in range(f):
-            if i == 0:
-                D[i, j] = 1 / np.sqrt(f)
-            else:
-                D[i, j] = np.sqrt(2 / f) * np.cos((np.pi * (2 * j + 1) * i) / (2 * f))
-    return D
-
-def dct2(block, D):
-    return D @ block @ D.T
-
-def idct2(block, D):
-    return D.T @ block @ D
-
 def image_to_base64(img):
     buffered = BytesIO()
     img.save(buffered, format="BMP")
@@ -35,11 +23,9 @@ def index():
     if request.method == 'POST':
         file = request.files.get('image_file')
         if file:
-            try:
-                F = int(request.form.get('block_size'))
-                d = int(request.form.get('threshold'))
-            except:
-                return "Errore: inserisci numeri interi per F e D.", 400
+            F = int(request.form.get('block_size'))  # Dimensione del blocco DCT
+            d = int(request.form.get('threshold'))
+  
 
             # Carica e prepara immagine
             image = Image.open(file).convert('L')

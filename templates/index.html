@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DCT Image Compression</title>
+  <title>progetto dct</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -60,10 +60,10 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Block Size -->
             <div class="space-y-4">
-              <h2 class="text-xl font-semibold text-gray-800">2. Ampiezza delle finestrelle</h2>
+              <h2 class="text-xl font-semibold text-gray-800">2. dimensione dei blocchi</h2>
               <div class="bg-gray-50 p-4 rounded-lg">
                 <div class="flex justify-between mb-2">
-                  <label for="blockSize" class="text-gray-700">Block Dimension:</label>
+                  <label for="blockSize" class="text-gray-700">seleziona la dimensione:</label>
                   <span id="blockSizeValue" class="font-medium text-indigo-600">8</span>
                 </div>
                 <input type="range" id="blockSize" name="block_size" min="4" max="32" step="4" value="8" class="w-full range-slider">
